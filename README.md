@@ -3,12 +3,14 @@
 ### You have X total functions
 ### For example
 
+```lua
 if (EnemyVisibleFront)
    Shoot();
 else if (FrontClear)
    Move();
 else
    TurnRight();
+```
 
 # Game
 
