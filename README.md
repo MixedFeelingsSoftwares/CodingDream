@@ -4,9 +4,9 @@
 ### For example
 
 ```lua
-if (EnemyVisibleFront)
+if (EnemyVisibleFront == true)
    Shoot();
-else if (FrontClear)
+else if (FrontClear == true)
    Move();
 else
    TurnRight();
