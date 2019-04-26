@@ -8,24 +8,15 @@ using UnityEngine;
 
 public class ScriptGenerator : MonoBehaviour
 {
+    public static ScriptGenerator Instance { get; private set; }
     public TMP_InputField field = null;
 
     private void Awake()
     {
+        Instance = this;
         field = GameObject.FindGameObjectWithTag("textCode").GetComponent<TMP_InputField>();
     }
 
-    // Start is called before the first frame update
-    void Start()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
 
     public void RefreshCommands()
     {
@@ -39,9 +30,12 @@ public class ScriptGenerator : MonoBehaviour
             {
                 foreach (string line in fields)
                 {
-                    if (Commands.CommandExists(line))
+                    bool cSrp = line.EndsWith("();");
+                    string cmd = line.Split('(')[0];
+                    if (Commands.CommandExists(cmd) && cSrp)
                     {
-                        Debug.Log($"Command Exists: {line}");
+                        Debug.Log($"Command Exists: {cmd}");
+                        Commands.RunActionByName(cmd);
                     }
                 }
             }
@@ -49,9 +43,12 @@ public class ScriptGenerator : MonoBehaviour
         else if (field != null && field.text.Length > 0)
         {
             string line = field.text;
-            if (Commands.CommandExists(line))
+            bool cSrp = line.EndsWith("();");
+            string cmd = line.Split('(')[0];
+            if (Commands.CommandExists(cmd) && cSrp)
             {
-                Debug.Log($"Command Exists: {line}");
+                Debug.Log($"Command Exists: {cmd}");
+                Commands.RunActionByName(cmd);
             }
         }
     }
@@ -95,7 +92,10 @@ public class Commands
             .Where(x => x.GetCustomAttributes(false).OfType<CommandName>().First().CommandText == Command)
             .First();
 
-        action.Invoke(new CommandMethods(), null);
+        if (action != null)
+        {
+            action.Invoke(new CommandMethods(), null);
+        }
     }
 }
 
