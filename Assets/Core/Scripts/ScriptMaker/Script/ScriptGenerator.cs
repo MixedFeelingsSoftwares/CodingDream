@@ -9,7 +9,8 @@ using UnityEngine;
 public class ScriptGenerator : MonoBehaviour
 {
     public static ScriptGenerator Instance { get; private set; }
-    public TMP_InputField field = null;
+
+    public TMP_InputField field { get; private set; }
 
     private void Awake()
     {

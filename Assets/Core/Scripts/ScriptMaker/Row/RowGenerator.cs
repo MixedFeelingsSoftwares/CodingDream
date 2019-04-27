@@ -32,43 +32,44 @@ public class RowGenerator : MonoBehaviour
         // Finds Parent with the tag 'lineRow'
         GameObject rows = GameObject.FindGameObjectWithTag("lineNumber");
 
-        if (Lines.Count > 0) { Lines.ForEach((line) => Destroy(line.gameObject)); }
-
         if (rows != null)
         {
-            for (int i = 0; i <= (totalLines + 1); i++)
+            for (int i = 0; i < totalLines; i++)
             {
                 // Make new Gameobject
-                Transform line = new GameObject($"lineRow [{i + 1}]", typeof(RectTransform)).transform;
+                Transform rowNum = new GameObject($"lineNumber [{i + 1}]", typeof(RectTransform)).transform;
 
                 // Sets tagged transform (gameobject) 'lineRow' as Parent
-                line.SetParent(rows.transform, false);
+                rowNum.SetParent(rows.transform, false);
 
                 // Get Rect Transform from Line Object
-                RectTransform rTransform = line.GetComponent<RectTransform>();
+                RectTransform rTransform = rowNum.GetComponent<RectTransform>();
                 rTransform.pivot = new Vector2(0.5f, 1.0f);
 
                 // Anchors
-                rTransform.anchorMax = new Vector2(1.0f, 1.0f);
-                rTransform.anchorMin = new Vector2(0.0f, 1.0f);
+                rTransform.anchorMax = new Vector2(0.5f, 1.0f);
+                rTransform.anchorMin = new Vector2(0.5f, 1.0f);
+
+
+                 
+                // Add Image to Row line
+                TextMeshProUGUI rowNumberText = rowNum.gameObject.AddComponent<TextMeshProUGUI>();
+                rowNumberText.text = $"{(i + 1)}";
+                rowNumberText.raycastTarget = false;
+                rowNumberText.alignment = TextAlignmentOptions.CenterGeoAligned;
+                rowNumberText.fontSize = 15.0f;
+                rowNumberText.color = new Color(0, 0, 0);
 
                 // Offsets (Pos Y)
-                float offsetY = -16.0f * (i + 1);
+                float offsetY = -rowNumberText.fontSize * (i + 1) + (rowNumberText.fontSize / 2);
 
                 rTransform.offsetMax = new Vector2(0.5f, offsetY);
                 rTransform.offsetMin = new Vector2(0.5f, offsetY);
 
                 // Set height to desired height
-                float rectHeight = 1f;
-                rTransform.sizeDelta = new Vector2(rTransform.sizeDelta.x, rectHeight);
+                rTransform.sizeDelta = new Vector2(rowNumberText.fontSize * (i + 1).ToString().Length, rowNumberText.fontSize);
 
-                // Add Image to Row line
-                TextMeshProUGUI img = line.gameObject.AddComponent<TextMeshProUGUI>();
-                img.text = $"{(i + 1)}";
-                img.raycastTarget = false;
-
-                //
-                Lines.Add(rTransform);
+                // Add transform to list
             }
         }
     }
