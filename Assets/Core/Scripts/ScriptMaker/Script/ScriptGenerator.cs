@@ -3,76 +3,67 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using TMPro;
 using UnityEngine;
 
-public class ScriptGenerator : MonoBehaviour
+[System.AttributeUsage(AttributeTargets.All, Inherited = false, AllowMultiple = true)]
+public sealed class CommandName : Attribute
 {
-    public static ScriptGenerator Instance { get; private set; }
+    // See the attribute guidelines at http://go.microsoft.com/fwlink/?LinkId=85236
 
-    public TMP_InputField field { get; private set; }
+    #region Private Fields
 
-    private void Awake()
+    private readonly string Command;
+
+    private readonly CommandType cType;
+
+    #endregion Private Fields
+
+    #region Public Constructors
+
+    // This is a positional argument
+    /// <summary>
+    /// Sets the Command and adds it to list of commands
+    /// </summary>
+    /// <param name="Command">Name of the command.</param>
+    public CommandName(string Command, CommandType type)
     {
-        Instance = this;
-        field = GameObject.FindGameObjectWithTag("textCode").GetComponent<TMP_InputField>();
+        this.Command = Command;
+        this.cType = type;
     }
 
+    #endregion Public Constructors
 
-    public void RefreshCommands()
+    #region Public Enums
+
+    public enum CommandType
     {
-        if (field == null) { return; }
+        Return = 0,
 
-        if (field.text.Contains('\n'))
-        {
-            string[] fields = field.text.Split('\n');
-
-            if (fields != null && fields.Length > 0 && fields.Length <= 25)
-            {
-                foreach (string line in fields)
-                {
-                    bool cSrp = line.EndsWith("();");
-                    string cmd = line.Split('(')[0];
-                    if (Commands.CommandExists(cmd) && cSrp)
-                    {
-                        Debug.Log($"Command Exists: {cmd}");
-                        Commands.RunActionByName(cmd);
-                    }
-                }
-            }
-        }
-        else if (field != null && field.text.Length > 0)
-        {
-            string line = field.text;
-            bool cSrp = line.EndsWith("();");
-            string cmd = line.Split('(')[0];
-            if (Commands.CommandExists(cmd) && cSrp)
-            {
-                Debug.Log($"Command Exists: {cmd}");
-                Commands.RunActionByName(cmd);
-            }
-        }
+        Action = 1
     }
+
+    #endregion Public Enums
+
+    #region Public Properties
+
+    public string CommandText
+    {
+        get { return Command; }
+    }
+
+    public CommandType getCommandType
+    {
+        get { return cType; }
+    }
+
+    #endregion Public Properties
 }
-
 
 public class Commands
 {
-    public class CommandMethods
-    {
-        [CommandName("Shoot", CommandName.CommandType.Action)]
-        public void Shoot()
-        {
-            Debug.Log("Shooting..");
-        }
-
-        [CommandName("myHealth", CommandName.CommandType.Return)]
-        public int getHealth()
-        {
-            Debug.Log(100);
-            return 100;
-        }
-    }
+    #region Public Methods
 
     public static bool CommandExists(string Command)
     {
@@ -82,7 +73,6 @@ public class Commands
            Where(x => x.GetCustomAttributes(false).OfType<CommandName>().Count() > 0)
            .Where(x => x.GetCustomAttributes(false).OfType<CommandName>().First().CommandText == Command);
 
-        
         return action != null && action.Count() > 0 ? true : false;
     }
 
@@ -98,44 +88,111 @@ public class Commands
             action.Invoke(new CommandMethods(), null);
         }
     }
+
+    #endregion Public Methods
+
+    #region Public Classes
+
+    public class CommandMethods
+    {
+        #region Public Methods
+
+        [CommandName("myHealth", CommandName.CommandType.Return)]
+        public int getHealth()
+        {
+            Debug.Log(100);
+            return 100;
+        }
+
+        [CommandName("Shoot", CommandName.CommandType.Action)]
+        public void Shoot()
+        {
+            Debug.Log("Shooting..");
+        }
+
+        #endregion Public Methods
+    }
+
+    #endregion Public Classes
 }
 
-
-
-[System.AttributeUsage(AttributeTargets.All, Inherited = false, AllowMultiple = true)]
-public sealed class CommandName : Attribute
+public class ScriptGenerator : MonoBehaviour
 {
-    // See the attribute guidelines at 
-    //  http://go.microsoft.com/fwlink/?LinkId=85236
+    #region Public Properties
 
-    readonly string Command;
-    
-    readonly CommandType cType;
+    public static ScriptGenerator Instance { get; private set; }
 
-    public enum CommandType
+    public TMP_InputField field { get; private set; }
+
+    #endregion Public Properties
+
+    #region Private Methods
+
+    private void Awake()
     {
-        Return = 0,
-        Action = 1
+        Instance = this;
+        field = GameObject.FindGameObjectWithTag("textCode").GetComponent<TMP_InputField>();
     }
 
-    // This is a positional argument
-    /// <summary>
-    /// Sets the Command and adds it to list of commands
-    /// </summary>
-    /// <param name="Command">Name of the command.</param>
-    public CommandName(string Command, CommandType type)
+    #endregion Private Methods
+
+    #region Public Methods
+
+    public void RefreshCommands()
     {
-        this.Command = Command;
-        this.cType = type;
+        if (field == null) { return; }
+
+        if (field.text.Contains('\n'))
+        {
+            string[] fields = field.text.Split('\n');
+
+            if (fields != null && fields.Length > 0 && fields.Length <= 25)
+            {
+                StringBuilder builder = new StringBuilder();
+
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    string line = fields[i];
+
+                    bool cSrp = line.EndsWith("();");
+                    string cmd = line.Split('(')[0];
+
+                    if (Commands.CommandExists(cmd) && cSrp)
+                    {
+                        Debug.Log($"Command Exists: {cmd}");
+
+                        string cCMD = line.Insert(0, "<b>")
+                            .Insert(line.Length, "</b>");
+
+                        builder.AppendLine(cCMD);
+
+                        Commands.RunActionByName(cmd);
+                    }
+                    else
+                    {
+                        builder.AppendLine(line);
+                    }
+                }
+
+                if (builder.ToString().Length > 0)
+                {
+                    field.text = builder.ToString();
+                    field.selectionAnchorPosition = builder.Length;
+                }
+            }
+        }
+        else if (field != null && field.text.Length > 0)
+        {
+            string line = field.text;
+            bool cSrp = line.EndsWith("();");
+            string cmd = line.Split('(')[0];
+            if (Commands.CommandExists(cmd) && cSrp)
+            {
+                Debug.Log($"Command Exists: {cmd}");
+                Commands.RunActionByName(cmd);
+            }
+        }
     }
 
-    public string CommandText
-    {
-        get { return Command; }
-    }
-
-    public CommandType getCommandType
-    {
-        get { return cType; }
-    }
+    #endregion Public Methods
 }
