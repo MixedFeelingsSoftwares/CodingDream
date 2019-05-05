@@ -8,6 +8,8 @@ public class RowGenerator : MonoBehaviour
 {
     #region Private Properties
 
+    public int RowHeight = 1;
+
     private List<RectTransform> Lines { get; } = new List<RectTransform>();
 
     #endregion Private Properties
@@ -50,8 +52,6 @@ public class RowGenerator : MonoBehaviour
                 rTransform.anchorMax = new Vector2(0.5f, 1.0f);
                 rTransform.anchorMin = new Vector2(0.5f, 1.0f);
 
-
-                 
                 // Add Image to Row line
                 TextMeshProUGUI rowNumberText = rowNum.gameObject.AddComponent<TextMeshProUGUI>();
                 rowNumberText.text = $"{(i + 1)}";
@@ -74,52 +74,8 @@ public class RowGenerator : MonoBehaviour
         }
     }
 
-    private void MakeRowLines(int totalRows)
-    {
-        // Finds Parent with the tag 'lineRow'
-        GameObject rows = GameObject.FindGameObjectWithTag("lineRow");
-        if (Lines.Count > 0) { Lines.ForEach((line) => Destroy(line.gameObject)); }
-        if (rows != null)
-        {
-            for (int i = 0; i <= (totalRows + 1); i++)
-            {
-                // Make new Gameobject
-                Transform line = new GameObject($"lineRow [{i + 1}]", typeof(RectTransform)).transform;
-
-                // Sets tagged transform (gameobject) 'lineRow' as Parent
-                line.SetParent(rows.transform, false);
-
-                // Get Rect Transform from Line Object
-                RectTransform rTransform = line.GetComponent<RectTransform>();
-                rTransform.pivot = new Vector2(0.5f, 1.0f);
-
-                // Anchors
-                rTransform.anchorMax = new Vector2(1.0f, 1.0f);
-                rTransform.anchorMin = new Vector2(0.0f, 1.0f);
-
-                // Offsets (Pos Y)
-                float offsetY = -16.0f * (i + 1);
-
-                rTransform.offsetMax = new Vector2(0.0f, offsetY);
-                rTransform.offsetMin = new Vector2(0.0f, offsetY);
-
-                // Set height to desired height
-                float rectHeight = 1f;
-
-                rTransform.sizeDelta = new Vector2(rTransform.sizeDelta.x, rectHeight);
-
-                // Add Image to Row line
-                Image img = line.gameObject.AddComponent<Image>();
-                img.color = new Color(0, 0, 0);
-                img.raycastTarget = false;
-                Lines.Add(rTransform);
-            }
-        }
-    }
-
     private void OnEnable()
     {
-        MakeRowLines(25);
         MakeLineNumbers(25);
     }
 
@@ -129,16 +85,4 @@ public class RowGenerator : MonoBehaviour
     }
 
     #endregion Private Methods
-
-    #region Public Methods
-
-    public void onLineRowUpdated()
-    {
-        //if (ScriptGenerator.Instance != null)
-        //{
-        //    MakeRowLines(25);
-        //}
-    }
-
-    #endregion Public Methods
 }
